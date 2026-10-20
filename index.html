@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Reseptit">
+<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<title>Reseptit</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍲</text></svg>">
+<style>
+:root{--bg:#F2F2F7;--sf:#fff;--ink:#000;--mut:#6E6E73;--ac:#007AFF;--red:#FF3B30;--ln:rgba(60,60,67,.18);--gl:rgba(255,255,255,.6);--glb:rgba(255,255,255,.75);--sh:0 8px 28px rgba(0,0,0,.14);color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--sf:#1C1C1E;--ink:#fff;--mut:#98989F;--ac:#0A84FF;--red:#FF453A;--ln:rgba(84,84,88,.55);--gl:rgba(58,58,60,.5);--glb:rgba(255,255,255,.2);--sh:0 8px 28px rgba(0,0,0,.55)}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:17px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;padding-top:env(safe-area-inset-top)}
+h1{font-size:34px;line-height:1.1;font-weight:700;letter-spacing:.37px;margin:0}
+h2{font-size:28px;line-height:1.15;font-weight:700;letter-spacing:.3px;margin:16px 4px 0}
+.mut{color:var(--mut);font-size:14px}.pad{padding:0 16px;margin:8px 0}
+.gl,.tile b,.ph.has span,.ts{background:var(--gl);-webkit-backdrop-filter:blur(22px) saturate(1.8);backdrop-filter:blur(22px) saturate(1.8);border:.5px solid var(--glb);box-shadow:var(--sh),inset 0 1px 0 var(--glb)}
+.top{display:flex;justify-content:space-between;align-items:flex-start;padding:16px 18px 6px}
+.cap{font:inherit;font-weight:500;color:var(--ink);min-height:44px;padding:0 18px;border-radius:99px;display:inline-flex;align-items:center;gap:7px;cursor:pointer;border:0}
+.cap.p{background:var(--ac);color:#fff;border:0;box-shadow:0 6px 18px rgba(0,122,255,.35)}
+.cap.wide{width:100%;justify-content:center;margin-top:16px;min-height:52px;font-weight:600}.cap.red{color:var(--red);margin-top:28px}
+:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+#list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:8px 14px 130px}
+@media(min-width:640px){#list{grid-template-columns:repeat(4,1fr)}}
+#list>p{grid-column:1/-1;text-align:center;padding:48px 24px;color:var(--mut)}
+.tile{position:relative;aspect-ratio:1;border:0;padding:0;border-radius:26px;overflow:hidden;background:linear-gradient(145deg,#34C759,#30B0C7);cursor:pointer;text-align:left;transition:transform .15s}.tile:active{transform:scale(.97)}
+.tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tile .em{position:absolute;inset:0 0 20% 0;display:grid;place-items:center;font-size:54px}
+.tile b{position:absolute;left:8px;right:8px;bottom:8px;padding:9px 14px;border-radius:99px;font-size:15px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{position:fixed;left:14px;right:14px;bottom:calc(10px + env(safe-area-inset-bottom));display:flex;gap:10px;z-index:6}
+.srch{flex:1;display:flex;align-items:center;gap:8px;height:54px;padding:0 18px;border-radius:99px;color:var(--mut)}
+input,textarea{width:100%;font:inherit;color:var(--ink);background:transparent;border:0;outline:0;margin:0;-webkit-appearance:none;appearance:none}
+.add{width:54px;height:54px;border-radius:50%;border:0;background:var(--ac);color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 8px 22px rgba(0,122,255,.4)}
+.sheet{position:fixed;inset:0;background:var(--bg);overflow:auto;padding:calc(10px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom));display:none;z-index:10}
+.sheet.on{display:block;animation:up .38s cubic-bezier(.2,.9,.3,1)}
+@keyframes up{from{transform:translateY(36px);opacity:0}}
+@media(prefers-reduced-motion:reduce){.sheet.on{animation:none}.tile{transition:none}}
+.w{max-width:640px;margin:0 auto}
+.nav{position:sticky;top:0;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:4px 0 8px;z-index:3}
+.nav>:first-child{justify-self:start}.nav>:last-child{justify-self:end}.nav b{font-size:17px;font-weight:600}
+.hero,.ph{width:100%;aspect-ratio:4/3;border-radius:26px;margin-top:10px}.hero{object-fit:cover;display:block}
+.ph{position:relative;display:grid;place-items:center;background:var(--sf);overflow:hidden;color:var(--ac);font-weight:600;cursor:pointer}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ph.has span{position:absolute;right:12px;bottom:12px;padding:9px 16px;border-radius:99px;color:var(--ink)}
+.hd{color:var(--mut);font-size:13px;margin:24px 16px 0}
+.grp{background:var(--sf);border-radius:22px;overflow:hidden;margin-top:8px}.grp:focus-within{box-shadow:0 0 0 2px var(--ac)}
+.grp>*{display:block;width:100%}.grp>*+*{border-top:.5px solid var(--ln)}
+.grp input,.grp textarea{padding:14px 16px}textarea{resize:none}
+.li{padding:12px 16px;user-select:text;-webkit-user-select:text}.nt{white-space:pre-wrap}
+.row2{display:flex;align-items:center;gap:10px;padding:14px 16px;color:var(--ac);background:none;border:0;font:inherit;text-align:left;cursor:pointer}
+pre{margin:0;padding:12px 16px;overflow-x:auto;font:13px ui-monospace,Menlo,monospace}
+.ts{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);padding:10px 18px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}.ts.on{opacity:1}
+</style>
+</head>
+<body>
+<header class="top"><div><h1>Reseptit</h1><div id="st" class="mut" style="margin-top:4px"></div></div><button class="cap gl" id="cfgB"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17.5 14.2c2.3.2 3.8 1.7 4.2 4.3"/></svg>Jaa</button></header>
+<main id="list"></main>
+<nav class="bar"><label class="gl srch"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="Hae" aria-label="Haku" autocomplete="off"></label><button class="add" id="newB" aria-label="Uusi resepti"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button></nav>
+
+<section class="sheet" id="vw"></section>
+
+<section class="sheet" id="ed"><div class="w">
+  <div class="nav"><button class="cap gl" id="cn">Peruuta</button><b id="edT"></b><button class="cap p" id="sv">Tallenna</button></div>
+  <label class="ph" id="phL"><img id="phI" alt="" hidden><span id="phS"></span><input type="file" accept="image/*" id="phF" hidden></label>
+  <div class="grp" style="margin-top:14px"><input id="ti" placeholder="Reseptin nimi" autocomplete="off"></div>
+  <div class="hd">Ainekset, yksi per rivi</div>
+  <div class="grp"><textarea id="ing" rows="8" placeholder="Kirjoita tai skannaa ainekset kuvasta"></textarea><label class="row2"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Skannaa ainekset kuvasta<input type="file" accept="image/*" multiple id="ocF" hidden></label></div>
+  <div id="ocrS" class="mut pad"></div>
+  <div class="hd">Muistiinpanot</div>
+  <div class="grp"><textarea id="nt" rows="4" placeholder="Ohje, vinkit…"></textarea></div>
+</div></section>
+
+<section class="sheet" id="cf"><div class="w">
+  <div class="nav"><button class="cap gl" id="cbk">Valmis</button><b>Jaa kumppanin kanssa</b><span></span></div>
+  <p class="mut pad">Jotta molemmat näette samat reseptit, ne tallennetaan ilmaiseen Firebase-tietokantaan. Asetus tehdään kerran, ja kumppani liittyy kutsulinkillä. Tarkat ohjeet ovat erillisessä asennusoppaassa.</p>
+  <div class="hd">1. Tietokannan sääntö (Firebase, Rules-välilehti)</div>
+  <div class="grp"><pre id="rl">{"rules":{"h":{"$code":{".read":true,".write":true}}}}</pre><button class="row2" id="cr">Kopioi sääntö</button></div>
+  <div class="hd">2. Tietokannan osoite</div>
+  <div class="grp"><input id="cu" type="url" placeholder="https://…firebasedatabase.app" autocapitalize="off" autocorrect="off"></div>
+  <div class="hd">Yhteinen koodi (luodaan automaattisesti)</div>
+  <div class="grp"><input id="cc" autocapitalize="off" autocorrect="off"></div>
+  <button class="cap p wide" id="cs">Tallenna ja synkronoi</button>
+  <div class="hd">3. Kutsu kumppani</div>
+  <div class="grp"><button class="row2" id="inv">Lähetä kutsulinkki</button></div>
+  <div class="hd">Sait kutsulinkin?</div>
+  <div class="grp"><input id="cj" placeholder="Liitä kutsulinkki tähän" autocapitalize="off" autocorrect="off"></div>
+  <p class="mut pad">Koodi toimii salasanana: reseptit näkee jokainen, joka tuntee osoitteen ja koodin.</p>
+</div></section>
+<div class="ts" id="ts" role="status"></div>
+
+<script>
+const $=s=>document.querySelector(s),esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let db={},cfg={},cur=null,photo='';
+try{db=JSON.parse(localStorage.getItem('rc')||'{}');cfg=JSON.parse(localStorage.getItem('rcfg')||'{}')}catch(e){}
+const persist=()=>{try{localStorage.setItem('rc',JSON.stringify(db))}catch(e){alert('Laitteen tallennustila on täynnä.')}};
+const show=id=>{['vw','ed','cf'].forEach(x=>$('#'+x).classList.toggle('on',x===id));scrollTo(0,0)};
+function toast(m){const e=$('#ts');e.textContent=m;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),1800)}
+async function copy(t){try{await navigator.clipboard.writeText(t)}catch(e){const x=document.createElement('textarea');x.value=t;document.body.append(x);x.select();document.execCommand('copy');x.remove()}toast('Kopioitu')}
+
+function render(){
+  const q=$('#q').value.toLowerCase(),a=Object.values(db).filter(r=>!r.del&&(r.t+' '+r.i).toLowerCase().includes(q)).sort((x,y)=>y.u-x.u);
+  $('#list').innerHTML=a.length?a.map(r=>`<button class="tile" data-id="${r.id}">${r.p?`<img src="${r.p}" alt="">`:'<span class="em">🍲</span>'}<b>${esc(r.t)}</b></button>`).join(''):`<p class="mut">${q?'Haku ei löytänyt reseptejä.':'Ei vielä reseptejä. Lisää ensimmäinen painamalla ”Uusi resepti”.'}</p>`;
+}
+function openView(id){
+  const r=cur=db[id],L=r.i.split('\n').filter(Boolean);
+  $('#vw').innerHTML=`<div class="w"><div class="nav"><button class="cap gl" id="bk">‹ Takaisin</button><span></span><button class="cap gl" id="eb">Muokkaa</button></div>${r.p?`<img class="hero" src="${r.p}" alt="">`:''}<h2>${esc(r.t)}</h2><div class="hd">Ainekset</div><div class="grp">${L.map(l=>`<div class="li">${esc(l)}</div>`).join('')||'<div class="li mut">Ei aineksia</div>'}</div><button class="cap p wide" id="cp">Kopioi ainekset</button>${r.n?`<div class="hd">Muistiinpanot</div><div class="grp"><div class="li nt">${esc(r.n)}</div></div>`:''}<button class="cap gl wide red" id="del">Poista resepti</button></div>`;
+  show('vw');
+}
+function setPh(){$('#phI').hidden=!photo;if(photo)$('#phI').src=photo;$('#phL').classList.toggle('has',!!photo);$('#phS').textContent=photo?'Vaihda kuva':'+ Lisää ruokakuva'}
+function openEdit(r){
+  cur=r;photo=r?r.p:'';$('#edT').textContent=r?'Muokkaa reseptiä':'Uusi resepti';
+  $('#ti').value=r?r.t:'';$('#ing').value=r?r.i:'';$('#nt').value=r?r.n:'';$('#ocrS').textContent='';setPh();show('ed');
+}
+function saveR(){
+  const t=$('#ti').value.trim();if(!t)return toast('Anna reseptille nimi');
+  const r={id:cur?cur.id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),t,i:$('#ing').value.trim(),n:$('#nt').value.trim(),p:photo,u:Date.now()};
+  db[r.id]=r;persist();render();show(null);sync();
+}
+
+/* Kuvat */
+const loadImg=f=>new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=URL.createObjectURL(f)});
+async function shrink(f,max){const i=await loadImg(f),k=Math.min(1,max/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=Math.round(i.width*k);c.height=Math.round(i.height*k);c.getContext('2d').drawImage(i,0,0,c.width,c.height);return c}
+$('#phF').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;photo=(await shrink(f,560)).toDataURL('image/jpeg',.72);setPh()};
+
+/* Tekstintunnistus (OCR) */
+const loadTess=()=>window.Tesseract?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';s.onload=ok;s.onerror=no;document.head.append(s)});
+const clean=t=>t.split('\n').map(l=>l.replace(/^[\s•·*\-–—●○▪■□]+/,'').replace(/\s+/g,' ').trim()).filter(l=>l.length>1).join('\n');
+$('#ocF').onchange=async e=>{
+  const fs=[...e.target.files];e.target.value='';if(!fs.length)return;const s=$('#ocrS');
+  try{
+    s.textContent='Ladataan tekstintunnistusta (ensimmäisellä kerralla kestää hetken)…';await loadTess();const out=[];
+    for(let k=0;k<fs.length;k++){
+      const lbl=`Luetaan kuvaa ${k+1}/${fs.length}…`;s.textContent=lbl;
+      const c=await shrink(fs[k],2000),{data}=await Tesseract.recognize(c,'fin+eng',{logger:m=>{if(m.status==='recognizing text')s.textContent=lbl+' '+Math.round(m.progress*100)+' %'}});
+      out.push(clean(data.text));
+    }
+    const el=$('#ing');el.value=[el.value.trim(),...out].filter(Boolean).join('\n');
+    s.textContent='Valmis. Tarkista lista ja korjaa tarvittaessa.';
+  }catch(err){s.textContent='Tekstin luku epäonnistui. Tarkista verkkoyhteys ja yritä uudelleen.'}
+};
+
+/* Synkronointi (Firebase Realtime Database, REST) */
+async function sync(){
+  if(!cfg.url||!cfg.code){$('#st').textContent='Tallennettu vain tälle laitteelle';return}
+  const b=cfg.url.replace(/\/+$/,'')+'/h/'+encodeURIComponent(cfg.code)+'.json';
+  $('#st').textContent='Synkronoidaan…';
+  try{
+    const rr=await fetch(b);if(!rr.ok)throw 0;
+    const rm=(await rr.json())||{},up={};
+    new Set([...Object.keys(rm),...Object.keys(db)]).forEach(id=>{const a=db[id],c=rm[id];if(a&&(!c||a.u>c.u))up[id]=a;else if(c&&(!a||c.u>a.u))db[id]=c});
+    if(Object.keys(up).length&&!(await fetch(b,{method:'PATCH',body:JSON.stringify(up)})).ok)throw 0;
+    persist();render();
+    $('#st').textContent='Synkronoitu '+new Date().toLocaleTimeString('fi',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){$('#st').textContent='Synkronointi epäonnistui. Reseptit ovat tallessa tällä laitteella.'}
+}
+
+/* Tapahtumat */
+$('#q').oninput=render;
+$('#newB').onclick=()=>openEdit(null);
+$('#list').onclick=e=>{const t=e.target.closest('.tile');if(t)openView(t.dataset.id)};
+$('#vw').onclick=e=>{
+  const id=e.target.id;
+  if(id==='bk')show(null);
+  else if(id==='cp')copy(cur.i);
+  else if(id==='eb')openEdit(cur);
+  else if(id==='del'&&confirm(`Poistetaanko resepti ”${cur.t}”?`)){db[cur.id]={id:cur.id,del:1,u:Date.now(),t:'',i:'',n:'',p:''};persist();render();show(null);sync()}
+};
+$('#cn').onclick=()=>show(null);
+$('#sv').onclick=saveR;
+$('#cfgB').onclick=()=>{$('#cu').value=cfg.url||'';$('#cc').value=cfg.code||(crypto.randomUUID?crypto.randomUUID().replace(/-/g,'').slice(0,20):Date.now().toString(36)+Math.random().toString(36).slice(2,10));$('#cj').value='';show('cf')};
+$('#cbk').onclick=()=>show(null);
+$('#cr').onclick=()=>copy($('#rl').textContent);
+$('#cs').onclick=()=>{if(!$('#cu').value.trim())return toast('Liitä ensin tietokannan osoite');cfg={url:$('#cu').value.trim(),code:$('#cc').value.trim()};localStorage.setItem('rcfg',JSON.stringify(cfg));show(null);sync()};
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync()});
+function join(t){
+  const m=(t||'').match(/#j=([^\s&]+)/);if(!m)return false;
+  try{const c=JSON.parse(decodeURIComponent(atob(m[1])));if(!c.url||!c.code)return false;cfg=c;localStorage.setItem('rcfg',JSON.stringify(cfg));return true}catch(e){return false}
+}
+$('#inv').onclick=async()=>{
+  if(!cfg.url||!cfg.code)return toast('Tallenna ensin asetukset');
+  const l=location.href.split('#')[0]+'#j='+btoa(encodeURIComponent(JSON.stringify(cfg)));
+  if(navigator.share){try{await navigator.share({title:'Reseptit',text:'Avaa linkki, niin reseptimme yhdistyvät:',url:l});return}catch(e){if(e.name==='AbortError')return}}
+  copy(l);
+};
+$('#cj').oninput=e=>{if(join(e.target.value)){show(null);toast('Yhdistetty kumppanin reseptipankkiin');sync()}};
+if(location.hash.startsWith('#j=')&&join(location.hash)){history.replaceState(null,'',location.pathname+location.search);toast('Yhdistetty kumppanin reseptipankkiin')}
+render();sync();
+</script>
+</body>
+</html>
