@@ -66,12 +66,28 @@ pre{margin:0;padding:12px 16px;overflow-x:auto;font:13px ui-monospace,Menlo,mono
 .cwrap{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px}
 .cwrap .chip{background:var(--bg);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}.cwrap .chip.on{background:var(--ac)}
 textarea{overflow:hidden}
+.tabs{display:flex;margin:6px 14px 4px;padding:3px;border-radius:99px;gap:2px}
+.tabs button{flex:1;height:38px;border:0;border-radius:99px;background:none;font:inherit;font-weight:600;color:var(--mut);cursor:pointer}
+.tabs button.on{background:var(--sf);color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.18)}
+#calc{padding-bottom:60px}
+.cr{display:flex;align-items:center;gap:10px;padding:9px 16px}.cr span{flex:1}
+.cr input{width:112px;text-align:right;background:var(--bg);border-radius:10px;padding:9px 12px}
+.cr i{width:30px;color:var(--mut);font-style:normal}
+.cr input.sw{width:51px;height:31px;padding:0;border-radius:99px;background:var(--ln);position:relative;transition:background .2s;cursor:pointer}
+.cr input.sw::after{content:'';position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.3);transition:transform .2s}
+.cr input.sw:checked{background:#34C759}.cr input.sw:checked::after{transform:translateX(20px)}
+.er{display:flex;gap:6px;padding:8px 10px;align-items:center}
+.er input{flex:1;min-width:0;padding:10px;background:var(--bg);border-radius:10px}.er input:first-child{flex:2}
+.er button{border:0;background:none;color:var(--red);font-size:24px;width:34px;cursor:pointer}
+.tl{font-size:15px}
 </style>
 </head>
 <body>
 <header class="top"><div><h1>Reseptit</h1><div id="st" class="mut" style="margin-top:4px"></div></div><div class="r"><div class="seg gl" id="thm" role="group" aria-label="Sävy"><button data-t="light" aria-label="Vaalea"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button><button data-t="dark" aria-label="Tumma"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button></div><button class="cap gl" id="cfgB"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17.5 14.2c2.3.2 3.8 1.7 4.2 4.3"/></svg>Jaa</button></div></header>
+<div class="tabs gl" id="tabs"><button class="on" data-v="r">Reseptit</button><button data-v="c">Laskurit</button></div>
 <div class="chips" id="cats" hidden></div>
 <main id="list"></main>
+<section id="calc" hidden></section>
 <nav class="bar"><label class="gl srch"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="Hae" aria-label="Haku" autocomplete="off"></label><button class="add" id="newB" aria-label="Uusi resepti"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button></nav>
 
 <section class="sheet" id="vw"></section>
@@ -108,6 +124,7 @@ textarea{overflow:hidden}
   <div class="grp"><input id="cj" placeholder="Liitä kutsulinkki tähän" autocapitalize="off" autocorrect="off"></div>
   <p class="mut pad">Koodi toimii salasanana: reseptit näkee jokainen, joka tuntee osoitteen ja koodin.</p>
 </div></section>
+<section class="sheet" id="ce"></section>
 <div class="ts" id="ts" role="status"></div>
 
 <script>
@@ -115,17 +132,17 @@ const $=s=>document.querySelector(s),esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'
 let db={},cfg={},cur=null,photo='',flt='';
 try{db=JSON.parse(localStorage.getItem('rc')||'{}');cfg=JSON.parse(localStorage.getItem('rcfg')||'{}')}catch(e){}
 const persist=()=>{try{localStorage.setItem('rc',JSON.stringify(db))}catch(e){alert('Laitteen tallennustila on täynnä.')}};
-const show=id=>{['vw','ed','cf'].forEach(x=>$('#'+x).classList.toggle('on',x===id));scrollTo(0,0)};
+const show=id=>{['vw','ed','cf','ce'].forEach(x=>$('#'+x).classList.toggle('on',x===id));scrollTo(0,0)};
 function toast(m){const e=$('#ts');e.textContent=m;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),1800)}
 async function copy(t){try{await navigator.clipboard.writeText(t)}catch(e){const x=document.createElement('textarea');x.value=t;document.body.append(x);x.select();document.execCommand('copy');x.remove()}toast('Kopioitu')}
 
 const tileH=r=>`<button class="tile" data-id="${r.id}">${r.p?`<img src="${r.p}" alt="">`:'<span class="em">🍲</span>'}<b>${esc(r.t)}</b></button>`;
-const catList=()=>[...new Set(Object.values(db).filter(r=>!r.del&&r.c).map(r=>r.c))].sort((a,b)=>a.localeCompare(b,'fi'));
+const catList=()=>[...new Set(Object.values(db).filter(r=>!r.del&&!r.k&&r.c).map(r=>r.c))].sort((a,b)=>a.localeCompare(b,'fi'));
 function render(){
   const q=$('#q').value.toLowerCase(),cs=catList();if(flt&&!cs.includes(flt))flt='';
-  $('#cats').hidden=!cs.length;
+  $('#cats').hidden=!cs.length||view==='c';
   $('#cats').innerHTML=cs.length?[''].concat(cs).map(c=>`<button class="chip${c===flt?' on':''}" data-c="${esc(c)}">${c?esc(c):'Kaikki'}</button>`).join(''):'';
-  const a=Object.values(db).filter(r=>!r.del&&(!flt||r.c===flt)&&(r.t+' '+r.i+' '+(r.h||'')).toLowerCase().includes(q)).sort((x,y)=>y.u-x.u);
+  const a=Object.values(db).filter(r=>!r.del&&!r.k&&(!flt||r.c===flt)&&(r.t+' '+r.i+' '+(r.h||'')).toLowerCase().includes(q)).sort((x,y)=>y.u-x.u);
   let h;
   if(!a.length)h=`<p>${q||flt?'Haku ei löytänyt reseptejä.':'Ei vielä reseptejä. Lisää ensimmäinen painamalla +.'}</p>`;
   else if(flt||q||!cs.length)h=`<div class="gw">${a.map(tileH).join('')}</div>`;
@@ -239,6 +256,91 @@ const curTheme=()=>document.documentElement.dataset.theme||(matchMedia('(prefers
 function paint(){const t=curTheme();document.querySelectorAll('#thm button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));$('meta[name=theme-color]').content=t==='dark'?'#000000':'#F2F2F7'}
 $('#thm').onclick=e=>{const b=e.target.closest('button');if(!b)return;document.documentElement.dataset.theme=b.dataset.t;try{localStorage.setItem('rth',b.dataset.t)}catch(x){}paint()};
 paint();
+/* Laskurit */
+let view='r',ac='c_riisi',sc=1,ce=null;
+const SEED=[{id:'c_riisi',t:'Riisi',pn:'Henkilöt',per:2,r:[['Riisi',2,'dl'],['Vesi',3.5,'dl']],f:[['Induktioliesi','4,5'],['Keittoaika','12 min']],rice:1},
+{id:'c_taikina',t:'Pizzataikina',pn:'Pizzat',per:4,r:[['Jauhot',500,'g'],['Vesi',325,'g'],['Suola',10,'g'],['Kuivahiiva',2,'g']],f:[['Nostatus','12–24 h']],dough:1}];
+let seeded=0;SEED.forEach(c=>{if(!db[c.id]){db[c.id]={...c,k:1,n:'',u:0};seeded=1}});if(seeded)persist();
+const fm=x=>(Math.round(x*100)/100).toString().replace('.',','),pnum=v=>{const x=parseFloat(String(v).replace(',','.'));return isNaN(x)?0:x};
+const calcs=()=>Object.values(db).filter(r=>r.k&&!r.del).sort((a,b)=>(a.t||'').localeCompare(b.t||'','fi'));
+const ab=c=>c.rice&&c.corr&&c.r.length>1&&c.r[1][1]>c.r[0][1];
+const base=(c,j)=>j?c.r[j-1][1]:c.per;
+const cv=(c,j,s)=>ab(c)&&j===2?Math.min(c.r[1][1]*s,c.r[0][1]*s+c.r[1][1]-c.r[0][1]):base(c,j)*s;
+const invv=(c,j,v)=>{if(ab(c)&&j===2){const R=c.r[0][1],W=c.r[1][1];return v<=W?v/W:(v-W+R)/R}return v/base(c,j)};
+const touch=c=>{c.u=Date.now();persist();sync()};
+function setView(v){
+  view=v;document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  $('#list').hidden=$('.bar').hidden=v==='c';$('#calc').hidden=v!=='c';
+  if(v==='c'){$('#cats').hidden=true;drawC()}else render();
+}
+function drawC(){
+  const cs=calcs(),c=db[ac]&&db[ac].k&&!db[ac].del?db[ac]:cs[0];
+  if(!c){$('#calc').innerHTML='<p class="mut pad">Ei laskureita.</p><div class="chips"><button class="chip" data-a="+">+ Uusi</button></div>';return}
+  ac=c.id;
+  const rows=[[c.pn||'Annokset',cv(c,0,sc),'']].concat(c.r.map((x,i)=>[x[0],cv(c,i+1,sc),x[2]]));
+  $('#calc').innerHTML=`<div class="chips">${cs.map(x=>`<button class="chip${x.id===c.id?' on':''}" data-a="${x.id}">${esc(x.t)}</button>`).join('')}<button class="chip" data-a="+">+ Uusi</button></div><div class="w" style="padding:0 14px"><h2>${esc(c.t)}</h2><div class="hd">Muuta mitä tahansa lukua, muut päivittyvät</div><div class="grp">${rows.map((r,j)=>`<label class="cr"><span>${esc(r[0])}</span><input inputmode="decimal" data-j="${j}" value="${fm(r[1])}"><i>${esc(r[2])}</i></label>`).join('')}</div>${c.rice?`<div class="grp" style="margin-top:12px"><label class="cr"><span>Korjaa vesi isolle erälle</span><input type="checkbox" class="sw" id="corr"${c.corr?' checked':''}></label></div>`:''}${c.f.length?`<div class="hd">Kattila ja liesi (ei skaalaudu)</div><div class="grp">${c.f.map((x,i)=>`<label class="cr"><span>${esc(x[0])}</span><input data-f="${i}" value="${esc(x[1])}"></label>`).join('')}</div>`:''}<div id="tip"></div><button class="cap gl wide" id="ced">Muokkaa pohjaresepti</button></div>`;
+  tips(c);
+}
+function tips(c){
+  const s=sc,T=[];
+  if(c.rice&&c.r.length>1){
+    const R=c.r[0][1],W=c.r[1][1],u=c.r[1][2]||'',lin=W*s,low=R*s+W-R;
+    if(s>1.3){
+      T.push(c.corr?`Vesi on laskettu korjattuna: riisi imee vettä noin 1:1, ja haihtuma (${fm(W-R)} ${u}) pidetään samana. Jos riisi jää kovaksi, lisää hieman kuumaa vettä.`:`Haihtuminen ei kasva samassa suhteessa kuin riisin määrä. Suhteessa laskettu vesi (${fm(lin)} ${u}) voi tehdä riisistä mössöä. Kokeile noin ${fm(low)} ${u}: kytke korjaus päälle tai lisää vettä tarvittaessa.`);
+      T.push('Käytä leveää, riittävän isoa kattilaa ja tiivistä kantta. Riisi paisuu noin kolminkertaiseksi, joten jätä tilaa.');
+      T.push('Keittoaika voi poiketa muutaman minuutin, koska isompi erä kuumenee hitaammin. Induktiolla pidä teho samana ja vaihda tarvittaessa isompaan keittoalueeseen. Anna riisin vetäytyä kannen alla keiton jälkeen.');
+    }else if(s<.75)T.push('Pienellä erällä vettä menee suhteessa enemmän, koska haihtuminen ei pienene samassa suhteessa. Tarkista veden määrä keittäessä.');
+  }
+  if(c.dough&&c.r.length>2&&c.r[0][1]>0){const f=c.r[0][1];T.push(`Vettä on ${fm(c.r[1][1]/f*100)} % ja suolaa ${fm(c.r[2][1]/f*100)} % jauhojen painosta. Pizzataikinassa vesi on yleensä 60–70 % ja suola 2–3 %. Prosentit pysyvät samoina, kun määriä skaalataan.`)}
+  $('#tip').innerHTML=T.length?`<div class="hd">Vinkit</div><div class="grp">${T.map(t=>`<div class="li tl">${esc(t)}</div>`).join('')}</div>`:'';
+}
+const refresh=c=>document.querySelectorAll('#calc [data-j]').forEach(x=>x.value=fm(cv(c,+x.dataset.j,sc)));
+$('#tabs').onclick=e=>{const b=e.target.closest('button');if(b)setView(b.dataset.v)};
+$('#calc').oninput=e=>{
+  const t=e.target,c=db[ac];if(t.dataset.j===undefined)return;
+  const v=pnum(t.value);if(v<=0)return;sc=invv(c,+t.dataset.j,v);
+  document.querySelectorAll('#calc [data-j]').forEach(x=>{if(x!==t)x.value=fm(cv(c,+x.dataset.j,sc))});tips(c);
+};
+$('#calc').onchange=e=>{
+  const t=e.target,c=db[ac];
+  if(t.dataset.j!==undefined)refresh(c);
+  else if(t.dataset.f!==undefined){c.f[+t.dataset.f][1]=t.value;touch(c)}
+  else if(t.id==='corr'){c.corr=t.checked;touch(c);refresh(c);tips(c)}
+};
+$('#calc').onclick=e=>{
+  const b=e.target.closest('[data-a]');
+  if(b){if(b.dataset.a==='+')openCE(null);else{ac=b.dataset.a;sc=1;drawC()}}else if(e.target.id==='ced')openCE(db[ac]);
+};
+function rowsE(){
+  $('#cer').innerHTML=ce.r.map((x,i)=>`<div class="er"><input data-r="${i}.0" placeholder="Aines" value="${esc(x[0])}"><input data-r="${i}.1" inputmode="decimal" value="${x[1]}"><input data-r="${i}.2" placeholder="yks." value="${esc(x[2])}"><button data-dr="${i}" aria-label="Poista rivi">×</button></div>`).join('');
+  $('#cef').innerHTML=ce.f.map((x,i)=>`<div class="er"><input data-f2="${i}.0" placeholder="Nimi" value="${esc(x[0])}"><input data-f2="${i}.1" placeholder="Arvo" value="${esc(x[1])}"><button data-df="${i}" aria-label="Poista rivi">×</button></div>`).join('');
+}
+function openCE(c){
+  ce=c?JSON.parse(JSON.stringify(c)):{id:'c_'+Date.now().toString(36),k:1,t:'',pn:'Annokset',per:2,r:[['',1,'']],f:[],n:''};
+  $('#ce').innerHTML=`<div class="w"><div class="nav"><button class="cap gl" id="cx">Peruuta</button><b>${c?'Muokkaa laskuria':'Uusi laskuri'}</b><button class="cap p" id="cz">Tallenna</button></div><div class="grp" style="margin-top:14px"><input data-e="t" placeholder="Laskurin nimi" value="${esc(ce.t)}"></div><div class="hd">Annokset pohjareseptissä</div><div class="grp"><div class="er"><input data-e="pn" placeholder="Nimi" value="${esc(ce.pn)}"><input data-e="per" inputmode="decimal" value="${ce.per}"></div></div><div class="hd">Ainekset pohjamäärillä</div><div class="grp" id="cer"></div><button class="cap gl wide" id="ar" style="margin-top:10px;min-height:44px">+ Lisää rivi</button><div class="hd">Kiinteät arvot (esim. liesi, aika)</div><div class="grp" id="cef"></div><button class="cap gl wide" id="af" style="margin-top:10px;min-height:44px">+ Lisää arvo</button>${c?'<button class="cap gl wide red" id="cdl">Poista laskuri</button>':''}</div>`;
+  rowsE();show('ce');
+}
+$('#ce').oninput=e=>{
+  const d=e.target.dataset,v=e.target.value;
+  if(d.e)ce[d.e]=d.e==='per'?pnum(v):v;
+  else if(d.r){const[i,k]=d.r.split('.');ce.r[i][k]=k==='1'?pnum(v):v}
+  else if(d.f2){const[i,k]=d.f2.split('.');ce.f[i][k]=v}
+};
+$('#ce').onclick=e=>{
+  const t=e.target,d=t.dataset;
+  if(t.id==='cx')show(null);
+  else if(t.id==='ar'){ce.r.push(['',1,'']);rowsE()}
+  else if(t.id==='af'){ce.f.push(['','']);rowsE()}
+  else if(d.dr!==undefined){ce.r.splice(+d.dr,1);rowsE()}
+  else if(d.df!==undefined){ce.f.splice(+d.df,1);rowsE()}
+  else if(t.id==='cdl'){if(confirm(`Poistetaanko laskuri ”${ce.t}”?`)){db[ce.id]={id:ce.id,k:1,del:1,u:Date.now(),t:'',pn:'',per:1,r:[],f:[]};persist();ac='';sc=1;show(null);setView('c');sync()}}
+  else if(t.id==='cz'){
+    ce.r=ce.r.filter(x=>x[0].trim());ce.f=ce.f.filter(x=>x[0].trim());
+    if(!ce.t.trim())return toast('Anna laskurille nimi');
+    if(!(ce.per>0)||!ce.r.length||ce.r.some(x=>!(x[1]>0)))return toast('Tarkista määrät: niiden pitää olla suurempia kuin 0');
+    ce.u=Date.now();db[ce.id]=ce;persist();ac=ce.id;sc=1;show(null);setView('c');sync();
+  }
+};
 render();sync();
 </script>
 </body>
